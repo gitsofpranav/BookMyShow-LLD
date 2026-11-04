@@ -25,4 +25,13 @@ public class PaymentResult {
     public String getTransactionId() {
         return transactionId;
     }
+
+    public PaymentStatus getStatus() {
+        if (successful) {
+            return PaymentStatus.SUCCESS;
+        } else if (failed) {
+            return PaymentStatus.FAILED;
+        }
+        return PaymentStatus.PENDING;
+    }
 }

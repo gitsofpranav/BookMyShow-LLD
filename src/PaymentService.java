@@ -1,3 +1,4 @@
+import java.util.List;
 import java.util.UUID;
 import java.util.Optional;
 
@@ -69,6 +70,64 @@ public class PaymentService {
         payment.markRefunded();
         paymentRepository.update(payment);
         return true;
+    }
+
+    public List<Payment> findPendingPayments() {
+        return paymentRepository.findPendingPayments();
+    }
+
+    public PaymentStatus reconcilePayment(Payment payment) {
+
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            return payment.getStatus();
+        }
+
+        try {
+            PaymentStrategy strategy =
+                    getStrategy(payment.getMethod());
+
+            PaymentResult result = strategy.checkPaymentStatus(
+                    payment.getIdempotencyKey()
+            );
+
+            payment.updatePayment(
+                    result.getStatus(),
+                    result.getTransactionId()
+            );
+
+            paymentRepository.update(payment);
+
+            return payment.getStatus();
+
+        } catch (Exception exception) {
+
+            // Gateway status is still unknown.
+            // Keep payment PENDING for next recovery attempt.
+            return PaymentStatus.PENDING;
+        }
+    }
+
+    private PaymentStrategy getStrategy(PaymentStrategy strategy) {
+        if (strategy != null) {
+            return strategy;
+        }
+        throw new IllegalStateException("Payment strategy not available");
+    }
+
+    private PaymentStrategy getStrategy(String method) {
+        if (method == null) {
+            throw new IllegalArgumentException("Payment method is null");
+        }
+        switch (method.toUpperCase()) {
+            case "CARD":
+                return new CardPayment();
+            case "UPI":
+                return new UpiPayment();
+            case "WALLET":
+                return new WalletPayment();
+            default:
+                throw new IllegalArgumentException("Unsupported payment method: " + method);
+        }
     }
 
 }

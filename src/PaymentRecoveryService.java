@@ -2,43 +2,47 @@ import java.util.List;
 
 public class PaymentRecoveryService {
 
-    private PaymentRepository paymentRepository;
+    private final PaymentService paymentService;
 
-    public PaymentRecoveryService() {
-    }
-
-    public PaymentRecoveryService(PaymentRepository paymentRepository) {
-        this.paymentRepository = paymentRepository;
+    public PaymentRecoveryService(PaymentService paymentService) {
+        this.paymentService = paymentService;
     }
 
     public void recoverPendingPayments() {
 
         List<Payment> pendingPayments =
-            paymentRepository.findPendingPayments();
+                paymentService.findPendingPayments();
 
         for (Payment payment : pendingPayments) {
 
-            PaymentResult result =
-                payment.getStrategy().checkPaymentStatus(
-                    payment.getIdempotencyKey()
-                );
+            PaymentStatus status =
+                    paymentService.reconcilePayment(payment);
 
-            if (result.isSuccessful()) {
+            switch (status) {
 
-                payment.markSuccess(result.getTransactionId());
+                case SUCCESS:
+                    System.out.println(
+                        "Payment recovered successfully: "
+                        + payment.getPaymentId()
+                    );
+                    break;
 
-                paymentRepository.update(payment);
+                case FAILED:
+                    System.out.println(
+                        "Payment failed: "
+                        + payment.getPaymentId()
+                    );
+                    break;
 
-                // Confirm booking using a transactional
-                // booking confirmation operation.
+                case PENDING:
+                    System.out.println(
+                        "Payment still pending: "
+                        + payment.getPaymentId()
+                    );
+                    break;
 
-            } else if (result.isFailed()) {
-
-                payment.markFailed();
-
-                paymentRepository.update(payment);
-
-                // Release seats if still owned by this booking.
+                default:
+                    break;
             }
         }
     }

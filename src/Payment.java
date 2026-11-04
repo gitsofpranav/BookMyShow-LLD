@@ -54,6 +54,17 @@ public class Payment {
         this.status = PaymentStatus.REFUNDED;
     }
 
+    public void updatePayment(PaymentStatus status, String transactionId) {
+        if (status == PaymentStatus.SUCCESS) {
+            markSuccess(transactionId);
+        } else if (status == PaymentStatus.FAILED) {
+            this.transactionId = transactionId;
+            markFailed();
+        } else if (status == PaymentStatus.REFUNDED) {
+            markRefunded();
+        }
+    }
+
     public String getPaymentId() {
         return paymentId;
     }
@@ -79,6 +90,10 @@ public class Payment {
     }
 
     public PaymentStrategy getStrategy() {
+        return strategy;
+    }
+
+    public PaymentStrategy getMethod() {
         return strategy;
     }
 }
