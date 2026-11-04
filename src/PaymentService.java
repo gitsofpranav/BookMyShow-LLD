@@ -12,7 +12,7 @@ public class PaymentService {
 
     public Payment processPayment(
             Booking booking,
-            PaymentStrategy strategy) {
+            PaymentMethod method) {
 
         String key = booking.getBookingId();
 
@@ -30,11 +30,13 @@ public class PaymentService {
                 booking,
                 booking.getTotalAmount(),
                 key,
-                strategy
+                method
         );
 
         // Step 3: Persist before gateway call
         paymentRepository.save(payment);
+
+        PaymentStrategy strategy = getStrategy(method);
 
         // Step 4: Process payment
         PaymentResult result = strategy.processPayment(
@@ -56,6 +58,20 @@ public class PaymentService {
         paymentRepository.update(payment);
 
         return payment;
+    }
+
+    public Payment processPayment(
+            Booking booking,
+            PaymentStrategy strategy) {
+
+        PaymentMethod method = PaymentMethod.CARD;
+        if (strategy instanceof UpiPayment) {
+            method = PaymentMethod.UPI;
+        } else if (strategy instanceof WalletPayment) {
+            method = PaymentMethod.WALLET;
+        }
+
+        return processPayment(booking, method);
     }
 
     public Payment getSuccessfulPayment(String bookingId) {
@@ -107,23 +123,16 @@ public class PaymentService {
         }
     }
 
-    private PaymentStrategy getStrategy(PaymentStrategy strategy) {
-        if (strategy != null) {
-            return strategy;
-        }
-        throw new IllegalStateException("Payment strategy not available");
-    }
-
-    private PaymentStrategy getStrategy(String method) {
+    public PaymentStrategy getStrategy(PaymentMethod method) {
         if (method == null) {
-            throw new IllegalArgumentException("Payment method is null");
+            throw new IllegalArgumentException("Payment method cannot be null");
         }
-        switch (method.toUpperCase()) {
-            case "CARD":
+        switch (method) {
+            case CARD:
                 return new CardPayment();
-            case "UPI":
+            case UPI:
                 return new UpiPayment();
-            case "WALLET":
+            case WALLET:
                 return new WalletPayment();
             default:
                 throw new IllegalArgumentException("Unsupported payment method: " + method);

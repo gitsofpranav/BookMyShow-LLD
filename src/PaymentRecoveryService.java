@@ -3,9 +3,19 @@ import java.util.List;
 public class PaymentRecoveryService {
 
     private final PaymentService paymentService;
+    private BookingService bookingService;
 
     public PaymentRecoveryService(PaymentService paymentService) {
         this.paymentService = paymentService;
+    }
+
+    public PaymentRecoveryService(PaymentService paymentService, BookingService bookingService) {
+        this.paymentService = paymentService;
+        this.bookingService = bookingService;
+    }
+
+    public void setBookingService(BookingService bookingService) {
+        this.bookingService = bookingService;
     }
 
     public void recoverPendingPayments() {
@@ -17,6 +27,13 @@ public class PaymentRecoveryService {
 
             PaymentStatus status =
                     paymentService.reconcilePayment(payment);
+
+            if (bookingService != null && payment.getBooking() != null) {
+                bookingService.handleRecoveredPayment(
+                        payment.getBooking().getBookingId(),
+                        status
+                );
+            }
 
             switch (status) {
 
