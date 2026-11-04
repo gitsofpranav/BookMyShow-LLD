@@ -11,6 +11,7 @@ public class Payment {
 
     private String transactionId;
     private String idempotencyKey;
+    private PaymentStrategy strategy;
 
     private LocalDateTime paymentTime;
 
@@ -20,10 +21,21 @@ public class Payment {
             BigDecimal amount,
             String idempotencyKey) {
 
+        this(paymentId, booking, amount, idempotencyKey, null);
+    }
+
+    public Payment(
+            String paymentId,
+            Booking booking,
+            BigDecimal amount,
+            String idempotencyKey,
+            PaymentStrategy strategy) {
+
         this.paymentId = paymentId;
         this.booking = booking;
         this.amount = amount;
         this.idempotencyKey = idempotencyKey;
+        this.strategy = strategy;
 
         this.status = PaymentStatus.PENDING;
     }
@@ -64,5 +76,9 @@ public class Payment {
 
     public String getIdempotencyKey() {
         return idempotencyKey;
+    }
+
+    public PaymentStrategy getStrategy() {
+        return strategy;
     }
 }

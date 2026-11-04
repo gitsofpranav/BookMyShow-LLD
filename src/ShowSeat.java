@@ -87,6 +87,18 @@ public class ShowSeat {
         return true;
     }
 
+    public synchronized boolean markAvailableAfterCancellation(Booking booking) {
+        if (status != SeatStatus.BOOKED) {
+            return false;
+        }
+
+        status = SeatStatus.AVAILABLE;
+        lockedBy = null;
+        lockExpiry = null;
+
+        return true;
+    }
+
     public boolean isAvailable() {
         return status == SeatStatus.AVAILABLE;
     }

@@ -4,10 +4,17 @@ public class PaymentRecoveryService {
 
     private PaymentRepository paymentRepository;
 
+    public PaymentRecoveryService() {
+    }
+
+    public PaymentRecoveryService(PaymentRepository paymentRepository) {
+        this.paymentRepository = paymentRepository;
+    }
+
     public void recoverPendingPayments() {
 
         List<Payment> pendingPayments =
-            paymentRepository.FIndingPendingPayments();
+            paymentRepository.findPendingPayments();
 
         for (Payment payment : pendingPayments) {
 

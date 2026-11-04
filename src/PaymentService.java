@@ -28,7 +28,8 @@ public class PaymentService {
                 UUID.randomUUID().toString(),
                 booking,
                 booking.getTotalAmount(),
-                key
+                key,
+                strategy
         );
 
         // Step 3: Persist before gateway call
@@ -55,4 +56,19 @@ public class PaymentService {
 
         return payment;
     }
+
+    public Payment getSuccessfulPayment(String bookingId) {
+        return paymentRepository.findSuccessfulPaymentByBookingId(bookingId).orElse(null);
+    }
+
+    public boolean initiateRefund(Payment payment) {
+        if (payment == null || payment.getStatus() != PaymentStatus.SUCCESS) {
+            return false;
+        }
+
+        payment.markRefunded();
+        paymentRepository.update(payment);
+        return true;
+    }
+
 }
