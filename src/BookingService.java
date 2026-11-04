@@ -77,7 +77,7 @@ public class BookingService {
 
             for (ShowSeat seat : lockedSeats) {
 
-                if (!seat.book(user)) {
+                if (!seat.book(user, booking.getBookingId())) {
                     allBooked = false;
                     break;
                 }
@@ -132,7 +132,7 @@ public class BookingService {
 
     // Release seats after refund request is accepted
     for (ShowSeat seat : booking.getSeats()) {
-        seat.markAvailableAfterCancellation(booking);
+        seat.markAvailableAfterCancellation(booking.getBookingId());
     }
 
     booking.cancelBooking();
